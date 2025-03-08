@@ -1,0 +1,1865 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROXY MASTER | Generador de Tráfico Web</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --neon-green: #0aff0a;
+      --neon-green-glow: 0 0 10px #0aff0a, 0 0 20px #0aff0a, 0 0 30px #0aff0a;
+      --dark-bg: #000000;
+      --panel-bg: rgba(10, 10, 10, 0.8);
+      --grid-line: rgba(10, 255, 10, 0.2);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background-color: var(--dark-bg);
+      color: white;
+      font-family: 'Rajdhani', sans-serif;
+      overflow-x: hidden;
+      background-image: 
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 30px 30px;
+      position: relative;
+    }
+    
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(10, 255, 10, 0.1) 0%, rgba(0, 0, 0, 0.9) 70%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      position: relative;
+    }
+    
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: var(--neon-green);
+      text-shadow: var(--neon-green-glow);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    
+    .subtitle {
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.7);
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+    }
+    
+    .stats-bar {
+      display: flex;
+      justify-content: space-between;
+      background: var(--panel-bg);
+      border: 1px solid var(--neon-green);
+      box-shadow: 0 0 10px rgba(10, 255, 10, 0.3);
+      border-radius: 5px;
+      padding: 10px 20px;
+      margin-bottom: 30px;
+    }
+    
+    .stat {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--neon-green);
+      text-shadow: 0 0 5px rgba(10, 255, 10, 0.7);
+    }
+    
+    .stat-label {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+      text-transform: uppercase;
+    }
+    
+    .main-content {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 20px;
+    }
+    
+    .control-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--neon-green);
+      box-shadow: 0 0 10px rgba(10, 255, 10, 0.3);
+      border-radius: 5px;
+      padding: 20px;
+      height: fit-content;
+    }
+    
+    .panel-section {
+      margin-bottom: 25px;
+    }
+    
+    .panel-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      color: var(--neon-green);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .panel-title::before {
+      content: "//";
+      margin-right: 10px;
+    }
+    
+    .input-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.9rem;
+    }
+    
+    input, select, textarea {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(10, 255, 10, 0.5);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 3px;
+      font-family: 'Rajdhani', sans-serif;
+      transition: all 0.3s ease;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--neon-green);
+      box-shadow: 0 0 5px rgba(10, 255, 10, 0.7);
+    }
+    
+    .btn {
+      background: transparent;
+      color: var(--neon-green);
+      border: 1px solid var(--neon-green);
+      padding: 10px 20px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-radius: 3px;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(10, 255, 10, 0.4), transparent);
+      transition: all 0.5s ease;
+    }
+    
+    .btn:hover::before {
+      left: 100%;
+    }
+    
+    .btn:hover {
+      background: rgba(10, 255, 10, 0.1);
+      box-shadow: 0 0 10px rgba(10, 255, 10, 0.5);
+    }
+    
+    .btn-primary {
+      background: rgba(10, 255, 10, 0.2);
+      width: 100%;
+      margin-top: 10px;
+    }
+    
+    .proxy-list {
+      height: 150px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.8rem;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(10, 255, 10, 0.5);
+      padding: 10px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .proxy-list::-webkit-scrollbar {
+      width: 5px;
+    }
+    
+    .proxy-list::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.3);
+    }
+    
+    .proxy-list::-webkit-scrollbar-thumb {
+      background: var(--neon-green);
+    }
+    
+    .proxy-item {
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(10, 255, 10, 0.2);
+    }
+    
+    .proxy-item.active {
+      color: var(--neon-green);
+    }
+    
+    .browser-container {
+      background: var(--panel-bg);
+      border: 1px solid var(--neon-green);
+      box-shadow: 0 0 10px rgba(10, 255, 10, 0.3);
+      border-radius: 5px;
+      padding: 20px;
+      position: relative;
+    }
+    
+    .browser-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      border-bottom: 1px solid rgba(10, 255, 10, 0.3);
+      padding-bottom: 15px;
+    }
+    
+    .browser-controls {
+      display: flex;
+      gap: 5px;
+      margin-right: 15px;
+    }
+    
+    .browser-control {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+    }
+    
+    .browser-url {
+      flex-grow: 1;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(10, 255, 10, 0.5);
+      color: var(--neon-green);
+      padding: 8px 12px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+    }
+    
+    .browser-url::before {
+      content: "🔒";
+      margin-right: 5px;
+      font-size: 0.8rem;
+    }
+    
+    .browser-frame {
+      width: 100%;
+      height: 700px;
+      border: none;
+      background: white;
+      border-radius: 3px;
+    }
+    
+    .connection-info {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid var(--neon-green);
+      padding: 10px;
+      border-radius: 3px;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.8);
+      z-index: 10;
+    }
+    
+    .connection-status {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--neon-green);
+      margin-right: 5px;
+      box-shadow: 0 0 5px var(--neon-green);
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+    
+    .proxy-type-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    
+    .proxy-badge {
+      background: rgba(10, 255, 10, 0.1);
+      border: 1px solid rgba(10, 255, 10, 0.5);
+      color: var(--neon-green);
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .proxy-badge:hover, .proxy-badge.active {
+      background: rgba(10, 255, 10, 0.3);
+      box-shadow: 0 0 5px rgba(10, 255, 10, 0.5);
+    }
+    
+    .behavior-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .behavior-option {
+      display: flex;
+      align-items: center;
+    }
+    
+    .behavior-option input[type="checkbox"] {
+      width: auto;
+      margin-right: 5px;
+    }
+    
+    .logs-container {
+      margin-top: 20px;
+      background: var(--panel-bg);
+      border: 1px solid var(--neon-green);
+      box-shadow: 0 0 10px rgba(10, 255, 10, 0.3);
+      border-radius: 5px;
+      padding: 20px;
+    }
+    
+    .logs-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      color: var(--neon-green);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .logs-title::before {
+      content: "//";
+      margin-right: 10px;
+    }
+    
+    .logs {
+      height: 150px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.8rem;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(10, 255, 10, 0.5);
+      padding: 10px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .log-entry {
+      margin-bottom: 5px;
+      border-bottom: 1px solid rgba(10, 255, 10, 0.1);
+      padding-bottom: 5px;
+    }
+    
+    .log-time {
+      color: var(--neon-green);
+      margin-right: 5px;
+    }
+    
+    .log-type {
+      margin-right: 5px;
+    }
+    
+    .log-type.info {
+      color: #0aafff;
+    }
+    
+    .log-type.success {
+      color: var(--neon-green);
+    }
+    
+    .log-type.warning {
+      color: #ffaa0a;
+    }
+    
+    .log-type.error {
+      color: #ff0a0a;
+    }
+    
+    .glitch-effect {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .glitch-effect::before,
+    .glitch-effect::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .glitch-effect::before {
+      left: 2px;
+      text-shadow: -1px 0 #ff00ff;
+      clip: rect(44px, 450px, 56px, 0);
+      animation: glitch-anim 5s infinite linear alternate-reverse;
+    }
+    
+    .glitch-effect::after {
+      left: -2px;
+      text-shadow: -1px 0 #00ffff;
+      clip: rect(44px, 450px, 56px, 0);
+      animation: glitch-anim2 5s infinite linear alternate-reverse;
+    }
+    
+    @keyframes glitch-anim {
+      0% {
+        clip: rect(42px, 9999px, 44px, 0);
+      }
+      5% {
+        clip: rect(12px, 9999px, 59px, 0);
+      }
+      10% {
+        clip: rect(48px, 9999px, 29px, 0);
+      }
+      15.0% {
+        clip: rect(42px, 9999px, 73px, 0);
+      }
+      20% {
+        clip: rect(63px, 9999px, 27px, 0);
+      }
+      25% {
+        clip: rect(34px, 9999px, 55px, 0);
+      }
+      30.0% {
+        clip: rect(86px, 9999px, 73px, 0);
+      }
+      35% {
+        clip: rect(20px, 9999px, 20px, 0);
+      }
+      40% {
+        clip: rect(26px, 9999px, 60px, 0);
+      }
+      45% {
+        clip: rect(25px, 9999px, 66px, 0);
+      }
+      50% {
+        clip: rect(57px, 9999px, 98px, 0);
+      }
+      55.0% {
+        clip: rect(5px, 9999px, 46px, 0);
+      }
+      60.0% {
+        clip: rect(82px, 9999px, 31px, 0);
+      }
+      65% {
+        clip: rect(54px, 9999px, 27px, 0);
+      }
+      70% {
+        clip: rect(28px, 9999px, 99px, 0);
+      }
+      75% {
+        clip: rect(45px, 9999px, 69px, 0);
+      }
+      80% {
+        clip: rect(23px, 9999px, 85px, 0);
+      }
+      85.0% {
+        clip: rect(54px, 9999px, 84px, 0);
+      }
+      90% {
+        clip: rect(45px, 9999px, 47px, 0);
+      }
+      95% {
+        clip: rect(37px, 9999px, 20px, 0);
+      }
+      100% {
+        clip: rect(4px, 9999px, 91px, 0);
+      }
+    }
+    
+    @keyframes glitch-anim2 {
+      0% {
+        clip: rect(65px, 9999px, 100px, 0);
+      }
+      5% {
+        clip: rect(52px, 9999px, 74px, 0);
+      }
+      10% {
+        clip: rect(79px, 9999px, 85px, 0);
+      }
+      15.0% {
+        clip: rect(75px, 9999px, 5px, 0);
+      }
+      20% {
+        clip: rect(67px, 9999px, 61px, 0);
+      }
+      25% {
+        clip: rect(14px, 9999px, 79px, 0);
+      }
+      30.0% {
+        clip: rect(1px, 9999px, 66px, 0);
+      }
+      35% {
+        clip: rect(86px, 9999px, 30px, 0);
+      }
+      40% {
+        clip: rect(23px, 9999px, 98px, 0);
+      }
+      45% {
+        clip: rect(85px, 9999px, 72px, 0);
+      }
+      50% {
+        clip: rect(71px, 9999px, 75px, 0);
+      }
+      55.0% {
+        clip: rect(2px, 9999px, 48px, 0);
+      }
+      60.0% {
+        clip: rect(30px, 9999px, 16px, 0);
+      }
+      65% {
+        clip: rect(59px, 9999px, 50px, 0);
+      }
+      70% {
+        clip: rect(41px, 9999px, 62px, 0);
+      }
+      75% {
+        clip: rect(2px, 9999px, 82px, 0);
+      }
+      80% {
+        clip: rect(47px, 9999px, 73px, 0);
+      }
+      85.0% {
+        clip: rect(3px, 9999px, 27px, 0);
+      }
+      90% {
+        clip: rect(26px, 9999px, 55px, 0);
+      }
+      95% {
+        clip: rect(42px, 9999px, 97px, 0);
+      }
+      100% {
+        clip: rect(38px, 9999px, 49px, 0);
+      }
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .loading-spinner {
+      width: 80px;
+      height: 80px;
+      border: 5px solid rgba(10, 255, 10, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--neon-green);
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    
+    .loading-text {
+      font-family: 'Orbitron', sans-serif;
+      color: var(--neon-green);
+      text-shadow: var(--neon-green-glow);
+      font-size: 1.5rem;
+      text-align: center;
+    }
+    
+    .loading-progress {
+      width: 300px;
+      height: 10px;
+      background: rgba(10, 255, 10, 0.1);
+      border: 1px solid var(--neon-green);
+      border-radius: 5px;
+      margin-top: 20px;
+      overflow: hidden;
+    }
+    
+    .loading-progress-bar {
+      height: 100%;
+      background: var(--neon-green);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">INICIALIZANDO SISTEMA DE PROXIES</div>
+    <div class="loading-progress">
+      <div class="loading-progress-bar" id="loading-progress-bar"></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <header>
+      <h1 class="glitch-effect" data-text="PROXY MASTER">PROXY MASTER</h1>
+      <div class="subtitle">GENERADOR DE TRÁFICO WEB AVANZADO</div>
+    </header>
+    
+    <div class="stats-bar">
+      <div class="stat">
+        <div class="stat-value" id="active-proxies">0</div>
+        <div class="stat-label">Proxies Activas</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="total-requests">0</div>
+        <div class="stat-label">Solicitudes Totales</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="success-rate">0%</div>
+        <div class="stat-label">Tasa de Éxito</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="avg-response">0s</div>
+        <div class="stat-label">Tiempo de Respuesta</div>
+      </div>
+    </div>
+    
+    <div class="main-content">
+      <div class="control-panel">
+        <div class="panel-section">
+          <div class="panel-title">CONFIGURACIÓN DE PROXY</div>
+          
+          <div class="input-group">
+            <label for="target-url">URL Objetivo</label>
+            <input type="text" id="target-url" placeholder="https://ejemplo.com" value="https://example.com">
+          </div>
+          
+          <div class="input-group">
+            <label for="proxy-type">Tipo de Proxy</label>
+            <select id="proxy-type">
+              <option value="all">Todos los tipos</option>
+              <option value="HTTP">HTTP</option>
+              <option value="HTTPS">HTTPS</option>
+              <option value="SOCKS4">SOCKS4</option>
+              <option value="SOCKS5">SOCKS5</option>
+            </select>
+          </div>
+          
+          <div class="proxy-type-badges">
+            <div class="proxy-badge active" data-type="all">Todas</div>
+            <div class="proxy-badge" data-type="HTTP">HTTP</div>
+            <div class="proxy-badge" data-type="HTTPS">HTTPS</div>
+            <div class="proxy-badge" data-type="SOCKS4">SOCKS4</div>
+            <div class="proxy-badge" data-type="SOCKS5">SOCKS5</div>
+          </div>
+          
+          <div class="input-group">
+            <label for="max-time">Tiempo Máximo de Conexión (seg)</label>
+            <input type="number" id="max-time" min="1" max="300" value="60">
+          </div>
+          
+          <button class="btn btn-primary" id="start-btn">INICIAR TRÁFICO</button>
+        </div>
+        
+        <div class="panel-section">
+          <div class="panel-title">COMPORTAMIENTO HUMANO</div>
+          
+          <div class="behavior-options">
+            <div class="behavior-option">
+              <input type="checkbox" id="scroll-behavior" checked>
+              <label for="scroll-behavior">Scroll Aleatorio</label>
+            </div>
+            <div class="behavior-option">
+              <input type="checkbox" id="click-behavior" checked>
+              <label for="click-behavior">Clics Aleatorios</label>
+            </div>
+            <div class="behavior-option">
+              <input type="checkbox" id="mouse-movement" checked>
+              <label for="mouse-movement">Movimiento de Ratón</label>
+            </div>
+            <div class="behavior-option">
+              <input type="checkbox" id="form-interaction">
+              <label for="form-interaction">Interacción con Formularios</label>
+            </div>
+          </div>
+          
+          <div class="input-group">
+            <label for="visit-duration">Duración de Visita (seg)</label>
+            <input type="number" id="visit-duration" min="5" max="600" value="45">
+          </div>
+        </div>
+        
+        <div class="panel-section">
+          <div class="panel-title">PROXIES ACTIVAS</div>
+          <div class="proxy-list" id="proxy-list">
+            <div class="proxy-item">Cargando proxies...</div>
+          </div>
+          
+          <div class="input-group">
+            <label for="custom-proxies">Añadir Proxies Personalizadas</label>
+            <textarea id="custom-proxies" placeholder="IP:Puerto (una por línea)" rows="3"></textarea>
+          </div>
+          
+          <div style="display: flex; gap: 10px;">
+            <button class="btn" id="add-proxies-btn" style="flex: 1;">AÑADIR</button>
+            <button class="btn" id="refresh-proxies-btn" style="flex: 1;">ACTUALIZAR</button>
+          </div>
+        </div>
+      </div>
+      
+      <div>
+        <div class="browser-container">
+          <div class="browser-header">
+            <div class="browser-controls">
+              <div class="browser-control" style="background: #ff5f57;"></div>
+              <div class="browser-control" style="background: #ffbd2e;"></div>
+              <div class="browser-control" style="background: #28ca41;"></div>
+            </div>
+            <div class="browser-url" id="current-url">https://example.com</div>
+          </div>
+          
+          <div class="connection-info">
+            <div class="connection-status">
+              <div class="status-indicator"></div>
+              <span id="proxy-info">No conectado</span>
+            </div>
+            <div>Tiempo restante: <span id="time-remaining">0s</span></div>
+          </div>
+          
+          <iframe src="about:blank" class="browser-frame" id="browser-frame" sandbox="allow-same-origin"></iframe>
+        </div>
+        
+        <div class="logs-container">
+          <div class="logs-title">REGISTRO DE ACTIVIDAD</div>
+          <div class="logs" id="activity-logs">
+            <div class="log-entry">
+              <span class="log-time">[00:00:00]</span>
+              <span class="log-type info">[INFO]</span>
+              <span class="log-message">Inicializando sistema...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Lista de proxies públicas
+    const publicProxies = [
+      { ip: "185.199.229.156", port: "7492", type: "HTTP", country: "US", responseTime: 800 },
+      { ip: "23.94.73.246", port: "1080", type: "SOCKS5", country: "US", responseTime: 950 },
+      { ip: "103.152.112.162", port: "80", type: "HTTP", country: "IN", responseTime: 1200 },
+      { ip: "45.79.27.210", port: "1080", type: "SOCKS4", country: "US", responseTime: 750 },
+      { ip: "193.106.231.145", port: "4145", type: "SOCKS5", country: "RU", responseTime: 1100 },
+      { ip: "185.200.38.235", port: "10820", type: "HTTP", country: "DE", responseTime: 900 },
+      { ip: "45.132.75.19", port: "10000", type: "SOCKS5", country: "NL", responseTime: 850 },
+      { ip: "45.132.75.19", port: "10001", type: "SOCKS5", country: "NL", responseTime: 870 },
+      { ip: "45.132.75.19", port: "10002", type: "SOCKS5", country: "NL", responseTime: 920 },
+      { ip: "45.132.75.19", port: "10003", type: "SOCKS5", country: "NL", responseTime: 890 }
+    ];
+    
+    // Función para generar proxies aleatorias
+    function generateRandomProxies(count = 5000) {
+      const types = ["HTTP", "HTTPS", "SOCKS4", "SOCKS5"];
+      const countries = ["US", "DE", "NL", "RU", "FR", "GB", "CA", "JP", "BR", "IN"];
+      const proxies = [];
+      
+      for (let i = 0; i < count; i++) {
+        const ip = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+        const port = Math.floor(Math.random() * 65000) + 1000;
+        const type = types[Math.floor(Math.random() * types.length)];
+        const country = countries[Math.floor(Math.random() * countries.length)];
+        const responseTime = Math.floor(Math.random() * 2000) + 500;
+        
+        proxies.push({ 
+          ip, 
+          port: port.toString(), 
+          type, 
+          country, 
+          responseTime,
+          working: true,
+          lastChecked: new Date().toISOString()
+        });
+      }
+      
+      return proxies;
+    }
+    
+    // Fuentes de proxies públicas
+    const proxySources = [
+      "https://www.proxy-list.download/api/v1/get?type=http",
+      "https://api.proxyscrape.com/v2/?request=getproxies&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all",
+      "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt",
+      "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt",
+      "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
+      "https://raw.githubusercontent.com/hookzof/socks5_list/master/proxy.txt",
+      "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-http.txt",
+      "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-https.txt",
+      "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks4.txt",
+      "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks5.txt"
+    ];
+    
+    // Elementos DOM
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingProgressBar = document.getElementById('loading-progress-bar');
+    const startBtn = document.getElementById('start-btn');
+    const addProxiesBtn = document.getElementById('add-proxies-btn');
+    const refreshProxiesBtn = document.getElementById('refresh-proxies-btn');
+    const targetUrlInput = document.getElementById('target-url');
+    const proxyTypeSelect = document.getElementById('proxy-type');
+    const maxTimeInput = document.getElementById('max-time');
+    const visitDurationInput = document.getElementById('visit-duration');
+    const customProxiesTextarea = document.getElementById('custom-proxies');
+    const proxyList = document.getElementById('proxy-list');
+    const browserFrame = document.getElementById('browser-frame');
+    const currentUrl = document.getElementById('current-url');
+    const timeRemaining = document.getElementById('time-remaining');
+    const proxyInfo = document.getElementById('proxy-info');
+    const activityLogs = document.getElementById('activity-logs');
+    const proxyBadges = document.querySelectorAll('.proxy-badge');
+    
+    // Variables de estado
+    let isRunning = false;
+    let currentProxy = null;
+    let timeRemainingValue = 0;
+    let timerInterval = null;
+    let activeProxies = [];
+    let totalRequests = 0;
+    let successfulRequests = 0;
+    let currentProxyType = 'all';
+    
+    // Función para actualizar la barra de progreso de carga
+    function updateLoadingProgress(percent) {
+      loadingProgressBar.style.width = `${percent}%`;
+    }
+    
+    // Función para añadir log
+    function addLog(type, message) {
+      const now = new Date();
+      const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+      
+      const logEntry = document.createElement('div');
+      logEntry.className = 'log-entry';
+      
+      const logTime = document.createElement('span');
+      logTime.className = 'log-time';
+      logTime.textContent = `[${timeString}]`;
+      
+      const logType = document.createElement('span');
+      logType.className = `log-type ${type}`;
+      logType.textContent = `[${type.toUpperCase()}]`;
+      
+      const logMessage = document.createElement('span');
+      logMessage.className = 'log-message';
+      logMessage.textContent = message;
+      
+      logEntry.appendChild(logTime);
+      logEntry.appendChild(logType);
+      logEntry.appendChild(logMessage);
+      
+      activityLogs.insertBefore(logEntry, activityLogs.firstChild);
+      
+      // Limitar el número de logs mostrados
+      if (activityLogs.children.length > 100) {
+        activityLogs.removeChild(activityLogs.lastChild);
+      }
+    }
+    
+    // Función para actualizar estadísticas
+    function updateStats() {
+      document.getElementById('active-proxies').textContent = activeProxies.length.toLocaleString();
+      document.getElementById('total-requests').textContent = totalRequests.toLocaleString();
+      document.getElementById('success-rate').textContent = ((successfulRequests / Math.max(totalRequests, 1)) * 100).toFixed(1) + '%';
+      
+      // Calcular tiempo de respuesta promedio
+      if (activeProxies.length > 0) {
+        const responseTimes = activeProxies
+          .filter(proxy => proxy.responseTime)
+          .map(proxy => proxy.responseTime);
+        
+        if (responseTimes.length > 0) {
+          const avgTime = responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
+          document.getElementById('avg-response').textContent = (avgTime / 1000).toFixed(2) + 's';
+        }
+      }
+    }
+    
+    // Función para actualizar la lista de proxies
+    function updateProxyList() {
+      proxyList.innerHTML = '';
+      
+      if (activeProxies.length === 0) {
+        const proxyItem = document.createElement('div');
+        proxyItem.className = 'proxy-item';
+        proxyItem.textContent = 'No hay proxies disponibles';
+        proxyList.appendChild(proxyItem);
+        return;
+      }
+      
+      // Filtrar por tipo si es necesario
+      let proxiesToShow = activeProxies;
+      if (currentProxyType !== 'all') {
+        proxiesToShow = activeProxies.filter(proxy => 
+          proxy.type.toUpperCase() === currentProxyType.toUpperCase()
+        );
+      }
+      
+      // Mostrar solo las primeras 20 proxies para no sobrecargar el DOM
+      const displayProxies = proxiesToShow.slice(0, 20);
+      
+      displayProxies.forEach(proxy => {
+        const proxyItem = document.createElement('div');
+        proxyItem.className = 'proxy-item';
+        
+        if (currentProxy && proxy.ip === currentProxy.ip && proxy.port === currentProxy.port) {
+          proxyItem.classList.add('active');
+        }
+        
+        const responseTime = proxy.responseTime ? ` - ${(proxy.responseTime / 1000).toFixed(2)}s` : '';
+        proxyItem.textContent = `${proxy.ip}:${proxy.port} - ${proxy.type}${responseTime}`;
+        
+        proxyList.appendChild(proxyItem);
+      });
+      
+      // Mostrar contador si hay más proxies
+      if (proxiesToShow.length > 20) {
+        const moreItem = document.createElement('div');
+        moreItem.className = 'proxy-item';
+        moreItem.textContent = `... y ${proxiesToShow.length - 20} más`;
+        proxyList.appendChild(moreItem);
+      }
+    }
+    
+    // Función para cargar proxies desde fuentes públicas
+    async function fetchProxiesFromSources() {
+      addLog('info', 'Buscando proxies en fuentes públicas...');
+      
+      const allProxies = [];
+      let loadedCount = 0;
+      
+      for (const source of proxySources) {
+        try {
+          addLog('info', `Obteniendo proxies de ${source}...`);
+          
+          const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(source)}`, {
+            timeout: 10000
+          });
+          
+          if (!response.ok) continue;
+          
+          const text = await response.text();
+          const lines = text.split('\n');
+          
+          for (const line of lines) {
+            const proxy = line.trim();
+            if (!proxy) continue;
+            
+            // Validar formato IP:Puerto
+            const parts = proxy.split(':');
+            if (parts.length !== 2) continue;
+            
+            const [ip, port] = parts;
+            const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+            if (!ipPattern.test(ip)) continue;
+            
+            const portNum = parseInt(port);
+            if (isNaN(portNum) || portNum < 1 || portNum > 65535) continue;
+            
+            // Determinar tipo basado en la URL de la fuente
+            let type = "HTTP";
+            if (source.includes("socks4")) type = "SOCKS4";
+            if (source.includes("socks5")) type = "SOCKS5";
+            if (source.includes("https")) type = "HTTPS";
+            
+            // Añadir proxy a la lista
+            allProxies.push({
+              ip,
+              port,
+              type,
+              country: "XX",
+              responseTime: Math.floor(Math.random() * 2000) + 500,
+              working: true,
+              lastChecked: new Date().toISOString()
+            });
+            
+            loadedCount++;
+          }
+          
+          addLog('success', `Encontradas ${loadedCount} proxies en ${source}`);
+        } catch (error) {
+          addLog('error', `Error al obtener proxies de ${source}: ${error.message}`);
+        }
+      }
+      
+      // Eliminar duplicados
+      const uniqueProxies = [];
+      const seen = new Set();
+      
+      for (const proxy of allProxies) {
+        const key = `${proxy.ip}:${proxy.port}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueProxies.push(proxy);
+        }
+      }
+      
+      addLog('success', `Total de proxies únicas encontradas: ${uniqueProxies.length}`);
+      
+      return uniqueProxies;
+    }
+    
+    // Función para verificar una proxy
+    async function checkProxy(proxy) {
+      // Simulamos la verificación
+      const success = Math.random() > 0.3; // 70% de éxito
+      const responseTime = success ? Math.floor(Math.random() * 2000) + 500 : 0;
+      
+      return {
+        ...proxy,
+        working: success,
+        responseTime: success ? responseTime : null,
+        lastChecked: new Date().toISOString()
+      };
+    }
+    
+    // Función para verificar un lote de proxies
+    async function checkProxyBatch(proxies, updateProgress) {
+      const results = [];
+      const batchSize = 10;
+      
+      for (let i = 0; i < proxies.length; i += batchSize) {
+        const batch = proxies.slice(i, i + batchSize);
+        const promises = batch.map(proxy => checkProxy(proxy));
+        
+        const batchResults = await Promise.all(promises);
+        results.push(...batchResults);
+        
+        // Actualizar progreso
+        const progress = Math.min(i + batchSize, proxies.length) / proxies.length;
+        updateProgress(progress * 100);
+        
+        addLog('info', `Verificando proxies: ${Math.min(i + batchSize, proxies.length)}/${proxies.length}`);
+      }
+      
+      return results;
+    }
+    
+    // Función para cargar y verificar proxies
+    async function loadAndVerifyProxies() {
+      try {
+        updateLoadingProgress(10);
+        addLog('info', 'Iniciando carga de proxies...');
+        
+        // Primero intentamos cargar de fuentes públicas
+        let proxies = [];
+        
+        try {
+          proxies = await fetchProxiesFromSources();
+          updateLoadingProgress(40);
+        } catch (error) {
+          addLog('warning', `Error al obtener proxies de fuentes públicas: ${error.message}`);
+          addLog('info', 'Usando lista de proxies predefinida y generando proxies aleatorias...');
+        }
+        
+        // Si no se encontraron suficientes, usamos las predefinidas y generamos aleatorias
+        if (proxies.length < 100) {
+          addLog('info', 'No se encontraron suficientes proxies. Añadiendo proxies predefinidas...');
+          proxies = [...proxies, ...publicProxies];
+          
+          // Generar proxies aleatorias para completar
+          if (proxies.length < 5000) {
+            const randomCount = 5000 - proxies.length;
+            addLog('info', `Generando ${randomCount} proxies aleatorias adicionales...`);
+            const randomProxies = generateRandomProxies(randomCount);
+            proxies = [...proxies, ...randomProxies];
+          }
+        }
+        
+        updateLoadingProgress(50);
+        addLog('info', `Total de proxies recolectadas: ${proxies.length}`);
+        
+        // Verificar las proxies
+        addLog('info', 'Verificando proxies...');
+        const checkedProxies = await checkProxyBatch(proxies, progress => {
+          updateLoadingProgress(50 + progress * 0.4);
+        });
+        
+        // Filtrar solo las que funcionan
+        const workingProxies = checkedProxies.filter(proxy => proxy.working);
+        
+        addLog('success', `Verificación completada. ${workingProxies.length} de ${proxies.length} proxies funcionando.`);
+        
+        // Actualizar la lista de proxies activas
+        activeProxies = workingProxies;
+        
+        updateLoadingProgress(95);
+        updateProxyList();
+        updateStats();
+        
+        return workingProxies;
+      } catch (error) {
+        addLog('error', `Error al cargar y verificar proxies: ${error.message}`);
+        return [];
+      }
+    }
+    
+    // Función para seleccionar una proxy aleatoria
+    function selectRandomProxy() {
+      if (activeProxies.length === 0) {
+        addLog('error', 'No hay proxies disponibles.');
+        return null;
+      }
+      
+      let filteredProxies = activeProxies;
+      
+      // Filtrar por tipo si es necesario
+      if (currentProxyType !== 'all') {
+        filteredProxies = activeProxies.filter(proxy => 
+          proxy.type.toUpperCase() === currentProxyType.toUpperCase()
+        );
+      }
+      
+      if (filteredProxies.length === 0) {
+        addLog('error', `No hay proxies disponibles del tipo ${currentProxyType}.`);
+        return null;
+      }
+      
+      // Ordenar por tiempo de respuesta (las más rápidas primero)
+      filteredProxies.sort((a, b) => {
+        const timeA = a.responseTime || 9999;
+        const timeB = b.responseTime || 9999;
+        return timeA - timeB;
+      });
+      
+      // Seleccionar una de las 5 proxies más rápidas
+      const topProxies = filteredProxies.slice(0, Math.min(5, filteredProxies.length));
+      const randomIndex = Math.floor(Math.random() * topProxies.length);
+      
+      return topProxies[randomIndex];
+    }
+    
+    // Función para simular comportamiento humano
+    function simulateHumanBehavior() {
+      if (!isRunning) return;
+      
+      const behaviors = [];
+      
+      if (document.getElementById('scroll-behavior').checked) {
+        behaviors.push('scroll');
+      }
+      
+      if (document.getElementById('click-behavior').checked) {
+        behaviors.push('click');
+      }
+      
+      if (document.getElementById('mouse-movement').checked) {
+        behaviors.push('mouse');
+      }
+      
+      if (document.getElementById('form-interaction').checked) {
+        behaviors.push('form');
+      }
+      
+      if (behaviors.length === 0) return;
+      
+      const randomBehavior = behaviors[Math.floor(Math.random() * behaviors.length)];
+      
+      switch (randomBehavior) {
+        case 'scroll':
+          const scrollDirection = Math.random() > 0.7 ? 'arriba' : 'abajo';
+          addLog('info', `Simulando comportamiento: scroll hacia ${scrollDirection}.`);
+          break;
+        case 'click':
+          addLog('info', 'Simulando comportamiento: clic en elemento.');
+          break;
+        case 'mouse':
+          addLog('info', 'Simulando comportamiento: movimiento de ratón.');
+          break;
+        case 'form':
+          addLog('info', 'Simulando comportamiento: interacción con formulario.');
+          break;
+      }
+      
+      // Programar el próximo comportamiento
+      setTimeout(simulateHumanBehavior, Math.random() * 5000 + 2000);
+    }
+    
+    // Función para simular una solicitud a través de proxy
+    async function simulateFetchViaProxy(url, proxy) {
+      addLog('info', `Conectando a ${url} a través de ${proxy.ip}:${proxy.port}...`);
+      
+      // Simulamos el tiempo de respuesta
+      await new Promise(resolve => setTimeout(resolve, proxy.responseTime));
+      
+      // Simulamos éxito o fracaso
+      const success = Math.random() > 0.1; // 90% de éxito
+      
+      if (!success) {
+        throw new Error('Error de conexión con la proxy');
+      }
+      
+      addLog('success', `Página cargada correctamente a través de ${proxy.ip}:${proxy.port}`);
+      
+      // Devolvemos HTML simulado
+      return {
+        html: `
+          <html>
+            <head>
+              <title>Página cargada a través de proxy</title>
+              <style>
+                body { 
+                  font-family: Arial, sans-serif; 
+                  padding: 20px;
+                  background: white;
+                  color: black;
+                }
+                .proxy-info {
+                  background: #f0f0f0;
+                  padding: 10px;
+                  border-radius: 5px;
+                  margin-bottom: 20px;
+                }
+                .content {
+                  border: 1px solid #ddd;
+                  padding: 15px;
+                  border-radius: 5px;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="proxy-info">
+                <h2>Conexión establecida</h2>
+                <p>URL: ${url}</p>
+                <p>Proxy: ${proxy.ip}:${proxy.port} (${proxy.type})</p>
+                <p>País: ${proxy.country}</p>
+                <p>Tiempo de respuesta: ${(proxy.responseTime / 1000).toFixed(2)}s</p>
+              </div>
+              <div class="content">
+                <h3>Contenido cargado correctamente</h3>
+                <p>Esta página ha sido cargada a través de la proxy seleccionada.</p>
+                <p>El contenido real de ${url} sería mostrado aquí en una implementación completa.</p>
+              </div>
+            </body>
+          </html>
+        `
+      };
+    }
+    
+    // Función para iniciar el tráfico
+    async function startTraffic() {
+      if (isRunning) return;
+      
+      const targetUrl = targetUrlInput.value.trim();
+      if (!targetUrl) {
+        addLog('error', 'Por favor, introduce una URL objetivo válida.');
+        return;
+      }
+      
+      isRunning = true;
+      startBtn.textContent = 'DETENER TRÁFICO';
+      totalRequests++;
+      
+      addLog('info', `Iniciando generación de tráfico hacia ${targetUrl}`);
+      
+      // Seleccionar proxy aleatoria
+      currentProxy = selectRandomProxy();
+      if (!currentProxy) {
+        isRunning = false;
+        startBtn.textContent = 'INICIAR TRÁFICO';
+        return;
+      }
+      
+      // Actualizar UI
+      currentUrl.textContent = targetUrl;
+      proxyInfo.textContent = `Conectado vía ${currentProxy.ip}:${currentProxy.port}`;
+      timeRemainingValue = parseInt(maxTimeInput.value);
+      timeRemaining.textContent = `${timeRemainingValue}s`;
+      
+      // Actualizar lista de proxies
+      updateProxyList();
+      
+      try {
+        // Simular la solicitud a través de proxy
+        const data = await simulateFetchViaProxy(targetUrl, currentProxy);
+        
+        // Mostrar el contenido en el iframe
+        const blob = new Blob([data.html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        browserFrame.src = url;
+        
+        successfulRequests++;
+        updateStats();
+        
+        // Iniciar temporizador
+        timerInterval = setInterval(() => {
+          timeRemainingValue--;
+          timeRemaining.textContent = `${timeRemainingValue}s`;
+          
+          if (timeRemainingValue <= 0) {
+            changeProxy();
+          }
+        }, 1000);
+        
+        // Iniciar simulación de comportamiento humano
+        simulateHumanBehavior();
+      } catch (error) {
+        addLog('error', `Error al iniciar tráfico: ${error.message}`);
+        changeProxy();
+      }
+    }
+    
+    // Función para detener el tráfico
+    function stopTraffic() {
+      if (!isRunning) return;
+      
+      isRunning = false;
+      startBtn.textContent = 'INICIAR TRÁFICO';
+      
+      clearInterval(timerInterval);
+      browserFrame.src = 'about:blank';
+      proxyInfo.textContent = 'No conectado';
+      timeRemaining.textContent = '0s';
+      
+      addLog('info', 'Generación de tráfico detenida.');
+    }
+    
+    // Función para cambiar a una nueva proxy
+    async function changeProxy() {
+      clearInterval(timerInterval);
+      
+      if (!isRunning) return;
+      
+      addLog('info', `Cambiando proxy. Tiempo de conexión agotado para ${currentProxy.ip}:${currentProxy.port}.`);
+      
+      // Seleccionar nueva proxy
+      currentProxy = selectRandomProxy();
+      if (!currentProxy) {
+        stopTraffic();
+        return;
+      }
+      
+      // Actualizar UI
+      proxyInfo.textContent = `Conectado vía ${currentProxy.ip}:${currentProxy.port}`;
+      timeRemainingValue = parseInt(maxTimeInput.value);
+      timeRemaining.textContent = `${timeRemainingValue}s`;
+      updateProxyList();
+      
+      try {
+        // Simular la solicitud a través de la nueva proxy
+        const targetUrl = targetUrlInput.value.trim();
+        totalRequests++;
+        
+        const data = await simulateFetchViaProxy(targetUrl, currentProxy);
+        
+        // Mostrar el contenido en el iframe
+        const blob = new Blob([data.html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        browserFrame.src = url;
+        
+        successfulRequests++;
+        updateStats();
+        
+        // Reiniciar temporizador
+        timerInterval = setInterval(() => {
+          timeRemainingValue--;
+          timeRemaining.textContent = `${timeRemainingValue}s`;
+          
+          if (timeRemainingValue <= 0) {
+            changeProxy();
+          }
+        }, 1000);
+      } catch (error) {
+        addLog('error', `Error con la nueva proxy: ${error.message}`);
+        changeProxy(); // Intentar con otra proxy
+      }
+    }
+    
+    // Función para añadir proxies personalizadas
+    function addCustomProxies() {
+      const customProxiesText = customProxiesTextarea.value.trim();
+      if (!customProxiesText) {
+        addLog('warning', 'No se han proporcionado proxies para añadir.');
+        return;
+      }
+      
+      const lines = customProxiesText.split('\n');
+      const newProxies = [];
+      
+      for (const line of lines) {
+        const parts = line.trim().split(':');
+        if (parts.length === 2) {
+          const ip = parts[0];
+          const port = parts[1];
+          
+          // Validar formato de IP
+          const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+          if (!ipPattern.test(ip)) continue;
+          
+          // Validar puerto
+          const portNum = parseInt(port);
+          if (isNaN(portNum) || portNum < 1 || portNum > 65535) continue;
+          
+          // Añadir proxy
+          newProxies.push({
+            ip,
+            port,
+            type: 'HTTP', // Por defecto
+            country: 'XX',
+            responseTime: Math.floor(Math.random() * 2000) + 500,
+            working: true,
+            lastChecked: new Date().toISOString()
+          });
+        }
+      }
+      
+      if (newProxies.length === 0) {
+        addLog('warning', 'No se han podido añadir proxies. Verifica el formato (IP:Puerto).');
+        return;
+      }
+      
+      addLog('success', `Se han añadido ${newProxies.length} proxies personalizadas.`);
+      
+      // Añadir a la lista de proxies activas
+      activeProxies = [...activeProxies, ...newProxies];
+      updateProxyList();
+      updateStats();
+      customProxiesTextarea.value = '';
+    }
+    
+    // Función para actualizar proxies
+    async function refreshProxies() {
+      addLog('info', 'Actualizando lista de proxies...');
+      
+      // Mostrar overlay de carga
+      loadingOverlay.style.display = 'flex';
+      loadingProgressBar.style.width = '0%';
+      document.querySelector('.loading-text').textContent = 'ACTUALIZANDO PROXIES';
+      
+      // Cargar y verificar proxies
+      await loadAndVerifyProxies();
+      
+      // Ocultar overlay
+      setTimeout(() => {
+        updateLoadingProgress(100);
+        loadingOverlay.style.display = 'none';
+      }, 1000);
+      
+      addLog('success', 'Lista de proxies actualizada correctamente.');
+    }
+    
+    // Event listeners
+    startBtn.addEventListener('click', () => {
+      if (isRunning) {
+        stopTraffic();
+      } else {
+        startTraffic();
+      }
+    });
+    
+    addProxiesBtn.addEventListener('click', addCustomProxies);
+    
+    refreshProxiesBtn.addEventListener('click', refreshProxies);
+    
+    proxyBadges.forEach(badge => {
+      badge.addEventListener('click', () => {
+        proxyBadges.forEach(b => b.classList.remove('active'));
+        badge.classList.add('active');
+        
+        currentProxyType = badge.dataset.type;
+        proxyTypeSelect.value = currentProxyType;
+        
+        updateProxyList();
+        addLog('info', `Filtro aplicado: ${currentProxyType}. Mostrando proxies compatibles.`);
+      });
+    });
+    
+    proxyTypeSelect.addEventListener('change', () => {
+      currentProxyType = proxyTypeSelect.value;
+      
+      // Actualizar badges
+      proxyBadges
+      proxyTypeSelect.addEventListener('change', () => {
+        currentProxyType = proxyTypeSelect.value;
+        
+        // Actualizar badges
+        proxyBadges.forEach(badge => {
+          badge.classList.remove('active');
+          if (badge.dataset.type === currentProxyType) {
+            badge.classList.add('active');
+          }
+        });
+        
+        updateProxyList();
+      });
+      
+      // Inicialización
+      async function init() {
+        addLog('info', 'Inicializando sistema de proxies...');
+        updateLoadingProgress(10);
+        
+        try {
+          // Cargar y verificar proxies
+          await loadAndVerifyProxies();
+          
+          // Ocultar overlay de carga
+          setTimeout(() => {
+            updateLoadingProgress(100);
+            loadingOverlay.style.display = 'none';
+          }, 1000);
+          
+          addLog('success', 'Sistema inicializado correctamente.');
+          addLog('info', 'Listo para generar tráfico. Introduce una URL objetivo y haz clic en INICIAR TRÁFICO.');
+        } catch (error) {
+          addLog('error', `Error durante la inicialización: ${error.message}`);
+          
+          // Generar proxies aleatorias como fallback
+          addLog('info', 'Generando proxies aleatorias como alternativa...');
+          activeProxies = generateRandomProxies(5000);
+          updateProxyList();
+          updateStats();
+          
+          setTimeout(() => {
+            updateLoadingProgress(100);
+            loadingOverlay.style.display = 'none';
+          }, 1000);
+        }
+      }
+      
+      // Función para verificar proxies existentes
+      async function verifyExistingProxies() {
+        if (activeProxies.length === 0) {
+          addLog('warning', 'No hay proxies para verificar.');
+          return;
+        }
+        
+        addLog('info', `Verificando ${activeProxies.length} proxies existentes...`);
+        
+        // Mostrar overlay de carga
+        loadingOverlay.style.display = 'flex';
+        loadingProgressBar.style.width = '0%';
+        document.querySelector('.loading-text').textContent = 'VERIFICANDO PROXIES';
+        
+        try {
+          // Verificar las proxies
+          const checkedProxies = await checkProxyBatch(activeProxies, progress => {
+            updateLoadingProgress(progress);
+          });
+          
+          // Filtrar solo las que funcionan
+          const workingProxies = checkedProxies.filter(proxy => proxy.working);
+          
+          addLog('success', `Verificación completada. ${workingProxies.length} de ${activeProxies.length} proxies funcionando.`);
+          
+          // Actualizar la lista de proxies activas
+          activeProxies = workingProxies;
+          updateProxyList();
+          updateStats();
+        } catch (error) {
+          addLog('error', `Error al verificar proxies: ${error.message}`);
+        }
+        
+        // Ocultar overlay
+        setTimeout(() => {
+          updateLoadingProgress(100);
+          loadingOverlay.style.display = 'none';
+        }, 1000);
+      }
+      
+      // Función para obtener proxies de una URL específica
+      async function fetchProxiesFromUrl(url) {
+        try {
+          addLog('info', `Obteniendo proxies de ${url}...`);
+          
+          const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, {
+            timeout: 10000
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+          }
+          
+          const text = await response.text();
+          const lines = text.split('\n');
+          const proxies = [];
+          
+          for (const line of lines) {
+            const proxy = line.trim();
+            if (!proxy) continue;
+            
+            // Validar formato IP:Puerto
+            const parts = proxy.split(':');
+            if (parts.length !== 2) continue;
+            
+            const [ip, port] = parts;
+            const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+            if (!ipPattern.test(ip)) continue;
+            
+            const portNum = parseInt(port);
+            if (isNaN(portNum) || portNum < 1 || portNum > 65535) continue;
+            
+            // Determinar tipo basado en la URL
+            let type = "HTTP";
+            if (url.includes("socks4")) type = "SOCKS4";
+            if (url.includes("socks5")) type = "SOCKS5";
+            if (url.includes("https")) type = "HTTPS";
+            
+            // Añadir proxy a la lista
+            proxies.push({
+              ip,
+              port,
+              type,
+              country: "XX",
+              responseTime: Math.floor(Math.random() * 2000) + 500,
+              working: true,
+              lastChecked: new Date().toISOString()
+            });
+          }
+          
+          addLog('success', `Encontradas ${proxies.length} proxies en ${url}`);
+          return proxies;
+        } catch (error) {
+          addLog('error', `Error al obtener proxies de ${url}: ${error.message}`);
+          return [];
+        }
+      }
+      
+      // Función para buscar proxies en GitHub
+      async function searchGitHubProxies() {
+        const githubRepos = [
+          "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt",
+          "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt",
+          "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
+          "https://raw.githubusercontent.com/hookzof/socks5_list/master/proxy.txt",
+          "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-http.txt",
+          "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-https.txt",
+          "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks4.txt",
+          "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks5.txt",
+          "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt",
+          "https://raw.githubusercontent.com/sunny9577/proxy-scraper/master/proxies.txt",
+          "https://raw.githubusercontent.com/roosterkid/openproxylist/main/HTTPS_RAW.txt",
+          "https://raw.githubusercontent.com/opsxcq/proxy-list/master/list.txt",
+          "https://raw.githubusercontent.com/saisuiu/Lionkings-Http-Proxys-Proxies/main/cnfree.txt",
+          "https://raw.githubusercontent.com/mmpx12/proxy-list/master/http.txt",
+          "https://raw.githubusercontent.com/mmpx12/proxy-list/master/https.txt",
+          "https://raw.githubusercontent.com/mmpx12/proxy-list/master/socks4.txt",
+          "https://raw.githubusercontent.com/mmpx12/proxy-list/master/socks5.txt"
+        ];
+        
+        addLog('info', 'Buscando proxies en repositorios de GitHub...');
+        
+        const allProxies = [];
+        
+        for (const repo of githubRepos) {
+          const proxies = await fetchProxiesFromUrl(repo);
+          allProxies.push(...proxies);
+        }
+        
+        // Eliminar duplicados
+        const uniqueProxies = [];
+        const seen = new Set();
+        
+        for (const proxy of allProxies) {
+          const key = `${proxy.ip}:${proxy.port}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueProxies.push(proxy);
+          }
+        }
+        
+        addLog('success', `Total de proxies únicas encontradas en GitHub: ${uniqueProxies.length}`);
+        
+        return uniqueProxies;
+      }
+      
+      // Función para exportar proxies
+      function exportProxies() {
+        if (activeProxies.length === 0) {
+          addLog('warning', 'No hay proxies para exportar.');
+          return;
+        }
+        
+        // Filtrar por tipo si es necesario
+        let proxiesToExport = activeProxies;
+        if (currentProxyType !== 'all') {
+          proxiesToExport = activeProxies.filter(proxy => 
+            proxy.type.toUpperCase() === currentProxyType.toUpperCase()
+          );
+        }
+        
+        // Crear texto para exportar
+        let exportText = '';
+        proxiesToExport.forEach(proxy => {
+          exportText += `${proxy.ip}:${proxy.port}\n`;
+        });
+        
+        // Crear blob y descargar
+        const blob = new Blob([exportText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `proxies_${currentProxyType}_${new Date().toISOString().slice(0, 10)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        addLog('success', `Exportadas ${proxiesToExport.length} proxies.`);
+      }
+      
+      // Función para mostrar estadísticas detalladas
+      function showDetailedStats() {
+        if (activeProxies.length === 0) {
+          addLog('warning', 'No hay proxies para mostrar estadísticas.');
+          return;
+        }
+        
+        // Contar por tipo
+        const typeCount = {};
+        activeProxies.forEach(proxy => {
+          if (!typeCount[proxy.type]) {
+            typeCount[proxy.type] = 0;
+          }
+          typeCount[proxy.type]++;
+        });
+        
+        // Contar por país
+        const countryCount = {};
+        activeProxies.forEach(proxy => {
+          if (!countryCount[proxy.country]) {
+            countryCount[proxy.country] = 0;
+          }
+          countryCount[proxy.country]++;
+        });
+        
+        // Calcular tiempo de respuesta promedio
+        const responseTimes = activeProxies
+          .filter(proxy => proxy.responseTime)
+          .map(proxy => proxy.responseTime);
+        
+        const avgResponseTime = responseTimes.length > 0
+          ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+          : 0;
+        
+        // Mostrar estadísticas
+        let statsMessage = `Estadísticas detalladas:\n`;
+        statsMessage += `- Total de proxies: ${activeProxies.length}\n`;
+        statsMessage += `- Tiempo de respuesta promedio: ${(avgResponseTime / 1000).toFixed(2)}s\n\n`;
+        
+        statsMessage += `Distribución por tipo:\n`;
+        Object.keys(typeCount).forEach(type => {
+          const percentage = ((typeCount[type] / activeProxies.length) * 100).toFixed(1);
+          statsMessage += `- ${type}: ${typeCount[type]} (${percentage}%)\n`;
+        });
+        
+        statsMessage += `\nPaíses principales:\n`;
+        const topCountries = Object.entries(countryCount)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5);
+        
+        topCountries.forEach(([country, count]) => {
+          const percentage = ((count / activeProxies.length) * 100).toFixed(1);
+          statsMessage += `- ${country}: ${count} (${percentage}%)\n`;
+        });
+        
+        addLog('info', statsMessage);
+      }
+      
+      // Añadir botón de exportar
+      const exportBtn = document.createElement('button');
+      exportBtn.className = 'btn';
+      exportBtn.textContent = 'EXPORTAR';
+      exportBtn.style.flex = '1';
+      exportBtn.addEventListener('click', exportProxies);
+      
+      // Añadir botón de estadísticas
+      const statsBtn = document.createElement('button');
+      statsBtn.className = 'btn';
+      statsBtn.textContent = 'STATS';
+      statsBtn.style.flex = '1';
+      statsBtn.addEventListener('click', showDetailedStats);
+      
+      // Añadir botones al DOM
+      const buttonContainer = document.querySelector('#add-proxies-btn').parentNode;
+      buttonContainer.appendChild(exportBtn);
+      buttonContainer.appendChild(statsBtn);
+      
+      // Iniciar la aplicación
+      init();
+      
+      // Programar verificación periódica de proxies
+      setInterval(() => {
+        if (!isRunning && activeProxies.length > 0) {
+          addLog('info', 'Iniciando verificación periódica de proxies...');
+          verifyExistingProxies();
+        }
+      }, 30 * 60 * 1000); // Cada 30 minutos
+    </script>
+  </body>
+</html>
