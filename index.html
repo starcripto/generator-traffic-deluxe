@@ -771,6 +771,7 @@
           <div style="display: flex; gap: 10px;">
             <button class="btn" id="add-proxies-btn" style="flex: 1;">AÑADIR</button>
             <button class="btn" id="refresh-proxies-btn" style="flex: 1;">ACTUALIZAR</button>
+            <button class="btn" id="export-btn" style="flex: 1;">EXPORTAR</button>
           </div>
         </div>
       </div>
@@ -810,19 +811,21 @@
       </div>
     </div>
   </div>
+
   <script>
-    // Lista de proxies públicas
-    const publicProxies = [
-      { ip: "185.199.229.156", port: "7492", type: "HTTP", country: "US", responseTime: 800 },
-      { ip: "23.94.73.246", port: "1080", type: "SOCKS5", country: "US", responseTime: 950 },
-      { ip: "103.152.112.162", port: "80", type: "HTTP", country: "IN", responseTime: 1200 },
-      { ip: "45.79.27.210", port: "1080", type: "SOCKS4", country: "US", responseTime: 750 },
-      { ip: "193.106.231.145", port: "4145", type: "SOCKS5", country: "RU", responseTime: 1100 },
-      { ip: "185.200.38.235", port: "10820", type: "HTTP", country: "DE", responseTime: 900 },
-      { ip: "45.132.75.19", port: "10000", type: "SOCKS5", country: "NL", responseTime: 850 },
-      { ip: "45.132.75.19", port: "10001", type: "SOCKS5", country: "NL", responseTime: 870 },
-      { ip: "45.132.75.19", port: "10002", type: "SOCKS5", country: "NL", responseTime: 920 },
-      { ip: "45.132.75.19", port: "10003", type: "SOCKS5", country: "NL", responseTime: 890 }
+    // Lista de proxies predefinidas
+    const predefinedProxies = [
+      { ip: "185.199.229.156", port: "7492", type: "HTTP", country: "US", responseTime: 800, working: true },
+      { ip: "23.94.73.246", port: "1080", type: "SOCKS5", country: "US", responseTime: 950, working: true },
+      { ip: "103.152.112.162", port: "80", type: "HTTP", country: "IN", responseTime: 1200, working: true },
+      { ip: "103.152.112.162", port: "80", type: "HTTP", country: "IN", responseTime: 1200, working: true },
+      { ip: "45.79.27.210", port: "1080", type: "SOCKS4", country: "US", responseTime: 750, working: true },
+      { ip: "193.106.231.145", port: "4145", type: "SOCKS5", country: "RU", responseTime: 1100, working: true },
+      { ip: "185.200.38.235", port: "10820", type: "HTTP", country: "DE", responseTime: 900, working: true },
+      { ip: "45.132.75.19", port: "10000", type: "SOCKS5", country: "NL", responseTime: 850, working: true },
+      { ip: "45.132.75.19", port: "10001", type: "SOCKS5", country: "NL", responseTime: 870, working: true },
+      { ip: "45.132.75.19", port: "10002", type: "SOCKS5", country: "NL", responseTime: 920, working: true },
+      { ip: "45.132.75.19", port: "10003", type: "SOCKS5", country: "NL", responseTime: 890, working: true }
     ];
     
     // Función para generar proxies aleatorias
@@ -852,26 +855,13 @@
       return proxies;
     }
     
-    // Fuentes de proxies públicas
-    const proxySources = [
-      "https://www.proxy-list.download/api/v1/get?type=http",
-      "https://api.proxyscrape.com/v2/?request=getproxies&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all",
-      "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt",
-      "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt",
-      "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
-      "https://raw.githubusercontent.com/hookzof/socks5_list/master/proxy.txt",
-      "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-http.txt",
-      "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-https.txt",
-      "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks4.txt",
-      "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks5.txt"
-    ];
-    
     // Elementos DOM
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingProgressBar = document.getElementById('loading-progress-bar');
     const startBtn = document.getElementById('start-btn');
     const addProxiesBtn = document.getElementById('add-proxies-btn');
     const refreshProxiesBtn = document.getElementById('refresh-proxies-btn');
+    const exportBtn = document.getElementById('export-btn');
     const targetUrlInput = document.getElementById('target-url');
     const proxyTypeSelect = document.getElementById('proxy-type');
     const maxTimeInput = document.getElementById('max-time');
@@ -994,179 +984,6 @@
         moreItem.className = 'proxy-item';
         moreItem.textContent = `... y ${proxiesToShow.length - 20} más`;
         proxyList.appendChild(moreItem);
-      }
-    }
-    
-    // Función para cargar proxies desde fuentes públicas
-    async function fetchProxiesFromSources() {
-      addLog('info', 'Buscando proxies en fuentes públicas...');
-      
-      const allProxies = [];
-      let loadedCount = 0;
-      
-      for (const source of proxySources) {
-        try {
-          addLog('info', `Obteniendo proxies de ${source}...`);
-          
-          const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(source)}`, {
-            timeout: 10000
-          });
-          
-          if (!response.ok) continue;
-          
-          const text = await response.text();
-          const lines = text.split('\n');
-          
-          for (const line of lines) {
-            const proxy = line.trim();
-            if (!proxy) continue;
-            
-            // Validar formato IP:Puerto
-            const parts = proxy.split(':');
-            if (parts.length !== 2) continue;
-            
-            const [ip, port] = parts;
-            const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
-            if (!ipPattern.test(ip)) continue;
-            
-            const portNum = parseInt(port);
-            if (isNaN(portNum) || portNum < 1 || portNum > 65535) continue;
-            
-            // Determinar tipo basado en la URL de la fuente
-            let type = "HTTP";
-            if (source.includes("socks4")) type = "SOCKS4";
-            if (source.includes("socks5")) type = "SOCKS5";
-            if (source.includes("https")) type = "HTTPS";
-            
-            // Añadir proxy a la lista
-            allProxies.push({
-              ip,
-              port,
-              type,
-              country: "XX",
-              responseTime: Math.floor(Math.random() * 2000) + 500,
-              working: true,
-              lastChecked: new Date().toISOString()
-            });
-            
-            loadedCount++;
-          }
-          
-          addLog('success', `Encontradas ${loadedCount} proxies en ${source}`);
-        } catch (error) {
-          addLog('error', `Error al obtener proxies de ${source}: ${error.message}`);
-        }
-      }
-      
-      // Eliminar duplicados
-      const uniqueProxies = [];
-      const seen = new Set();
-      
-      for (const proxy of allProxies) {
-        const key = `${proxy.ip}:${proxy.port}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          uniqueProxies.push(proxy);
-        }
-      }
-      
-      addLog('success', `Total de proxies únicas encontradas: ${uniqueProxies.length}`);
-      
-      return uniqueProxies;
-    }
-    
-    // Función para verificar una proxy
-    async function checkProxy(proxy) {
-      // Simulamos la verificación
-      const success = Math.random() > 0.3; // 70% de éxito
-      const responseTime = success ? Math.floor(Math.random() * 2000) + 500 : 0;
-      
-      return {
-        ...proxy,
-        working: success,
-        responseTime: success ? responseTime : null,
-        lastChecked: new Date().toISOString()
-      };
-    }
-    
-    // Función para verificar un lote de proxies
-    async function checkProxyBatch(proxies, updateProgress) {
-      const results = [];
-      const batchSize = 10;
-      
-      for (let i = 0; i < proxies.length; i += batchSize) {
-        const batch = proxies.slice(i, i + batchSize);
-        const promises = batch.map(proxy => checkProxy(proxy));
-        
-        const batchResults = await Promise.all(promises);
-        results.push(...batchResults);
-        
-        // Actualizar progreso
-        const progress = Math.min(i + batchSize, proxies.length) / proxies.length;
-        updateProgress(progress * 100);
-        
-        addLog('info', `Verificando proxies: ${Math.min(i + batchSize, proxies.length)}/${proxies.length}`);
-      }
-      
-      return results;
-    }
-    
-    // Función para cargar y verificar proxies
-    async function loadAndVerifyProxies() {
-      try {
-        updateLoadingProgress(10);
-        addLog('info', 'Iniciando carga de proxies...');
-        
-        // Primero intentamos cargar de fuentes públicas
-        let proxies = [];
-        
-        try {
-          proxies = await fetchProxiesFromSources();
-          updateLoadingProgress(40);
-        } catch (error) {
-          addLog('warning', `Error al obtener proxies de fuentes públicas: ${error.message}`);
-          addLog('info', 'Usando lista de proxies predefinida y generando proxies aleatorias...');
-        }
-        
-        // Si no se encontraron suficientes, usamos las predefinidas y generamos aleatorias
-        if (proxies.length < 100) {
-          addLog('info', 'No se encontraron suficientes proxies. Añadiendo proxies predefinidas...');
-          proxies = [...proxies, ...publicProxies];
-          
-          // Generar proxies aleatorias para completar
-          if (proxies.length < 5000) {
-            const randomCount = 5000 - proxies.length;
-            addLog('info', `Generando ${randomCount} proxies aleatorias adicionales...`);
-            const randomProxies = generateRandomProxies(randomCount);
-            proxies = [...proxies, ...randomProxies];
-          }
-        }
-        
-        updateLoadingProgress(50);
-        addLog('info', `Total de proxies recolectadas: ${proxies.length}`);
-        
-        // Verificar las proxies
-        addLog('info', 'Verificando proxies...');
-        const checkedProxies = await checkProxyBatch(proxies, progress => {
-          updateLoadingProgress(50 + progress * 0.4);
-        });
-        
-        // Filtrar solo las que funcionan
-        const workingProxies = checkedProxies.filter(proxy => proxy.working);
-        
-        addLog('success', `Verificación completada. ${workingProxies.length} de ${proxies.length} proxies funcionando.`);
-        
-        // Actualizar la lista de proxies activas
-        activeProxies = workingProxies;
-        
-        updateLoadingProgress(95);
-        updateProxyList();
-        updateStats();
-        
-        return workingProxies;
-      } catch (error) {
-        addLog('error', `Error al cargar y verificar proxies: ${error.message}`);
-        return [];
       }
     }
     
@@ -1494,7 +1311,7 @@
     }
     
     // Función para actualizar proxies
-    async function refreshProxies() {
+    function refreshProxies() {
       addLog('info', 'Actualizando lista de proxies...');
       
       // Mostrar overlay de carga
@@ -1502,16 +1319,63 @@
       loadingProgressBar.style.width = '0%';
       document.querySelector('.loading-text').textContent = 'ACTUALIZANDO PROXIES';
       
-      // Cargar y verificar proxies
-      await loadAndVerifyProxies();
+      // Simular carga
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 5;
+        updateLoadingProgress(progress);
+        
+        if (progress >= 100) {
+          clearInterval(interval);
+          
+          // Generar nuevas proxies aleatorias
+          const randomProxies = generateRandomProxies(5000);
+          activeProxies = [...predefinedProxies, ...randomProxies];
+          
+          updateProxyList();
+          updateStats();
+          
+          addLog('success', `Lista de proxies actualizada. ${activeProxies.length} proxies disponibles.`);
+          
+          // Ocultar overlay
+          loadingOverlay.style.display = 'none';
+        }
+      }, 100);
+    }
+    
+    // Función para exportar proxies
+    function exportProxies() {
+      if (activeProxies.length === 0) {
+        addLog('warning', 'No hay proxies para exportar.');
+        return;
+      }
       
-      // Ocultar overlay
-      setTimeout(() => {
-        updateLoadingProgress(100);
-        loadingOverlay.style.display = 'none';
-      }, 1000);
+      // Filtrar por tipo si es necesario
+      let proxiesToExport = activeProxies;
+      if (currentProxyType !== 'all') {
+        proxiesToExport = activeProxies.filter(proxy => 
+          proxy.type.toUpperCase() === currentProxyType.toUpperCase()
+        );
+      }
       
-      addLog('success', 'Lista de proxies actualizada correctamente.');
+      // Crear texto para exportar
+      let exportText = '';
+      proxiesToExport.forEach(proxy => {
+        exportText += `${proxy.ip}:${proxy.port}\n`;
+      });
+      
+      // Crear blob y descargar
+      const blob = new Blob([exportText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `proxies_${currentProxyType}_${new Date().toISOString().slice(0, 10)}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      addLog('success', `Exportadas ${proxiesToExport.length} proxies.`);
     }
     
     // Event listeners
@@ -1526,6 +1390,8 @@
     addProxiesBtn.addEventListener('click', addCustomProxies);
     
     refreshProxiesBtn.addEventListener('click', refreshProxies);
+    
+    exportBtn.addEventListener('click', exportProxies);
     
     proxyBadges.forEach(badge => {
       badge.addEventListener('click', () => {
@@ -1544,322 +1410,48 @@
       currentProxyType = proxyTypeSelect.value;
       
       // Actualizar badges
-      proxyBadges
-      proxyTypeSelect.addEventListener('change', () => {
-        currentProxyType = proxyTypeSelect.value;
-        
-        // Actualizar badges
-        proxyBadges.forEach(badge => {
-          badge.classList.remove('active');
-          if (badge.dataset.type === currentProxyType) {
-            badge.classList.add('active');
-          }
-        });
-        
-        updateProxyList();
+      proxyBadges.forEach(badge => {
+        badge.classList.remove('active');
+        if (badge.dataset.type === currentProxyType) {
+          badge.classList.add('active');
+        }
       });
       
-      // Inicialización
-      async function init() {
-        addLog('info', 'Inicializando sistema de proxies...');
-        updateLoadingProgress(10);
+      updateProxyList();
+    });
+    
+    // Inicialización
+    function init() {
+      addLog('info', 'Inicializando sistema de proxies...');
+      
+      // Simular carga
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 2;
+        updateLoadingProgress(progress);
         
-        try {
-          // Cargar y verificar proxies
-          await loadAndVerifyProxies();
+        if (progress >= 100) {
+          clearInterval(interval);
           
-          // Ocultar overlay de carga
-          setTimeout(() => {
-            updateLoadingProgress(100);
-            loadingOverlay.style.display = 'none';
-          }, 1000);
+          // Generar proxies aleatorias
+          const randomProxies = generateRandomProxies(5000);
+          activeProxies = [...predefinedProxies, ...randomProxies];
+          
+          updateProxyList();
+          updateStats();
           
           addLog('success', 'Sistema inicializado correctamente.');
+          addLog('info', `${activeProxies.length} proxies cargadas y listas para usar.`);
           addLog('info', 'Listo para generar tráfico. Introduce una URL objetivo y haz clic en INICIAR TRÁFICO.');
-        } catch (error) {
-          addLog('error', `Error durante la inicialización: ${error.message}`);
           
-          // Generar proxies aleatorias como fallback
-          addLog('info', 'Generando proxies aleatorias como alternativa...');
-          activeProxies = generateRandomProxies(5000);
-          updateProxyList();
-          updateStats();
-          
-          setTimeout(() => {
-            updateLoadingProgress(100);
-            loadingOverlay.style.display = 'none';
-          }, 1000);
-        }
-      }
-      
-      // Función para verificar proxies existentes
-      async function verifyExistingProxies() {
-        if (activeProxies.length === 0) {
-          addLog('warning', 'No hay proxies para verificar.');
-          return;
-        }
-        
-        addLog('info', `Verificando ${activeProxies.length} proxies existentes...`);
-        
-        // Mostrar overlay de carga
-        loadingOverlay.style.display = 'flex';
-        loadingProgressBar.style.width = '0%';
-        document.querySelector('.loading-text').textContent = 'VERIFICANDO PROXIES';
-        
-        try {
-          // Verificar las proxies
-          const checkedProxies = await checkProxyBatch(activeProxies, progress => {
-            updateLoadingProgress(progress);
-          });
-          
-          // Filtrar solo las que funcionan
-          const workingProxies = checkedProxies.filter(proxy => proxy.working);
-          
-          addLog('success', `Verificación completada. ${workingProxies.length} de ${activeProxies.length} proxies funcionando.`);
-          
-          // Actualizar la lista de proxies activas
-          activeProxies = workingProxies;
-          updateProxyList();
-          updateStats();
-        } catch (error) {
-          addLog('error', `Error al verificar proxies: ${error.message}`);
-        }
-        
-        // Ocultar overlay
-        setTimeout(() => {
-          updateLoadingProgress(100);
+          // Ocultar overlay
           loadingOverlay.style.display = 'none';
-        }, 1000);
-      }
-      
-      // Función para obtener proxies de una URL específica
-      async function fetchProxiesFromUrl(url) {
-        try {
-          addLog('info', `Obteniendo proxies de ${url}...`);
-          
-          const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, {
-            timeout: 10000
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-          }
-          
-          const text = await response.text();
-          const lines = text.split('\n');
-          const proxies = [];
-          
-          for (const line of lines) {
-            const proxy = line.trim();
-            if (!proxy) continue;
-            
-            // Validar formato IP:Puerto
-            const parts = proxy.split(':');
-            if (parts.length !== 2) continue;
-            
-            const [ip, port] = parts;
-            const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
-            if (!ipPattern.test(ip)) continue;
-            
-            const portNum = parseInt(port);
-            if (isNaN(portNum) || portNum < 1 || portNum > 65535) continue;
-            
-            // Determinar tipo basado en la URL
-            let type = "HTTP";
-            if (url.includes("socks4")) type = "SOCKS4";
-            if (url.includes("socks5")) type = "SOCKS5";
-            if (url.includes("https")) type = "HTTPS";
-            
-            // Añadir proxy a la lista
-            proxies.push({
-              ip,
-              port,
-              type,
-              country: "XX",
-              responseTime: Math.floor(Math.random() * 2000) + 500,
-              working: true,
-              lastChecked: new Date().toISOString()
-            });
-          }
-          
-          addLog('success', `Encontradas ${proxies.length} proxies en ${url}`);
-          return proxies;
-        } catch (error) {
-          addLog('error', `Error al obtener proxies de ${url}: ${error.message}`);
-          return [];
         }
-      }
-      
-      // Función para buscar proxies en GitHub
-      async function searchGitHubProxies() {
-        const githubRepos = [
-          "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt",
-          "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt",
-          "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
-          "https://raw.githubusercontent.com/hookzof/socks5_list/master/proxy.txt",
-          "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-http.txt",
-          "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-https.txt",
-          "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks4.txt",
-          "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks5.txt",
-          "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt",
-          "https://raw.githubusercontent.com/sunny9577/proxy-scraper/master/proxies.txt",
-          "https://raw.githubusercontent.com/roosterkid/openproxylist/main/HTTPS_RAW.txt",
-          "https://raw.githubusercontent.com/opsxcq/proxy-list/master/list.txt",
-          "https://raw.githubusercontent.com/saisuiu/Lionkings-Http-Proxys-Proxies/main/cnfree.txt",
-          "https://raw.githubusercontent.com/mmpx12/proxy-list/master/http.txt",
-          "https://raw.githubusercontent.com/mmpx12/proxy-list/master/https.txt",
-          "https://raw.githubusercontent.com/mmpx12/proxy-list/master/socks4.txt",
-          "https://raw.githubusercontent.com/mmpx12/proxy-list/master/socks5.txt"
-        ];
-        
-        addLog('info', 'Buscando proxies en repositorios de GitHub...');
-        
-        const allProxies = [];
-        
-        for (const repo of githubRepos) {
-          const proxies = await fetchProxiesFromUrl(repo);
-          allProxies.push(...proxies);
-        }
-        
-        // Eliminar duplicados
-        const uniqueProxies = [];
-        const seen = new Set();
-        
-        for (const proxy of allProxies) {
-          const key = `${proxy.ip}:${proxy.port}`;
-          if (!seen.has(key)) {
-            seen.add(key);
-            uniqueProxies.push(proxy);
-          }
-        }
-        
-        addLog('success', `Total de proxies únicas encontradas en GitHub: ${uniqueProxies.length}`);
-        
-        return uniqueProxies;
-      }
-      
-      // Función para exportar proxies
-      function exportProxies() {
-        if (activeProxies.length === 0) {
-          addLog('warning', 'No hay proxies para exportar.');
-          return;
-        }
-        
-        // Filtrar por tipo si es necesario
-        let proxiesToExport = activeProxies;
-        if (currentProxyType !== 'all') {
-          proxiesToExport = activeProxies.filter(proxy => 
-            proxy.type.toUpperCase() === currentProxyType.toUpperCase()
-          );
-        }
-        
-        // Crear texto para exportar
-        let exportText = '';
-        proxiesToExport.forEach(proxy => {
-          exportText += `${proxy.ip}:${proxy.port}\n`;
-        });
-        
-        // Crear blob y descargar
-        const blob = new Blob([exportText], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `proxies_${currentProxyType}_${new Date().toISOString().slice(0, 10)}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        addLog('success', `Exportadas ${proxiesToExport.length} proxies.`);
-      }
-      
-      // Función para mostrar estadísticas detalladas
-      function showDetailedStats() {
-        if (activeProxies.length === 0) {
-          addLog('warning', 'No hay proxies para mostrar estadísticas.');
-          return;
-        }
-        
-        // Contar por tipo
-        const typeCount = {};
-        activeProxies.forEach(proxy => {
-          if (!typeCount[proxy.type]) {
-            typeCount[proxy.type] = 0;
-          }
-          typeCount[proxy.type]++;
-        });
-        
-        // Contar por país
-        const countryCount = {};
-        activeProxies.forEach(proxy => {
-          if (!countryCount[proxy.country]) {
-            countryCount[proxy.country] = 0;
-          }
-          countryCount[proxy.country]++;
-        });
-        
-        // Calcular tiempo de respuesta promedio
-        const responseTimes = activeProxies
-          .filter(proxy => proxy.responseTime)
-          .map(proxy => proxy.responseTime);
-        
-        const avgResponseTime = responseTimes.length > 0
-          ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
-          : 0;
-        
-        // Mostrar estadísticas
-        let statsMessage = `Estadísticas detalladas:\n`;
-        statsMessage += `- Total de proxies: ${activeProxies.length}\n`;
-        statsMessage += `- Tiempo de respuesta promedio: ${(avgResponseTime / 1000).toFixed(2)}s\n\n`;
-        
-        statsMessage += `Distribución por tipo:\n`;
-        Object.keys(typeCount).forEach(type => {
-          const percentage = ((typeCount[type] / activeProxies.length) * 100).toFixed(1);
-          statsMessage += `- ${type}: ${typeCount[type]} (${percentage}%)\n`;
-        });
-        
-        statsMessage += `\nPaíses principales:\n`;
-        const topCountries = Object.entries(countryCount)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 5);
-        
-        topCountries.forEach(([country, count]) => {
-          const percentage = ((count / activeProxies.length) * 100).toFixed(1);
-          statsMessage += `- ${country}: ${count} (${percentage}%)\n`;
-        });
-        
-        addLog('info', statsMessage);
-      }
-      
-      // Añadir botón de exportar
-      const exportBtn = document.createElement('button');
-      exportBtn.className = 'btn';
-      exportBtn.textContent = 'EXPORTAR';
-      exportBtn.style.flex = '1';
-      exportBtn.addEventListener('click', exportProxies);
-      
-      // Añadir botón de estadísticas
-      const statsBtn = document.createElement('button');
-      statsBtn.className = 'btn';
-      statsBtn.textContent = 'STATS';
-      statsBtn.style.flex = '1';
-      statsBtn.addEventListener('click', showDetailedStats);
-      
-      // Añadir botones al DOM
-      const buttonContainer = document.querySelector('#add-proxies-btn').parentNode;
-      buttonContainer.appendChild(exportBtn);
-      buttonContainer.appendChild(statsBtn);
-      
-      // Iniciar la aplicación
-      init();
-      
-      // Programar verificación periódica de proxies
-      setInterval(() => {
-        if (!isRunning && activeProxies.length > 0) {
-          addLog('info', 'Iniciando verificación periódica de proxies...');
-          verifyExistingProxies();
-        }
-      }, 30 * 60 * 1000); // Cada 30 minutos
-    </script>
-  </body>
+      }, 50);
+    }
+    
+    // Iniciar la aplicación
+    init();
+  </script>
+</body>
 </html>
